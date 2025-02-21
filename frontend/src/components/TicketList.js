@@ -6,11 +6,14 @@ import TicketCard from "./TicketCard";
 
 function TicketList() {
   const [tickets, setTickets] = useState([]);
+  const [filteredTickets, setFilteredTickets] = useState([]);
+  const [filterStatus, setFilterStatus] = useState("");
 
   const fetchTickets = async () => {
     try {
       const response = await api.get("/api/tickets");
       setTickets(response.data);
+      setFilteredTickets(response.data); 
     } catch (error) {
       console.error("Error fetching tickets:", error);
     }
@@ -36,10 +39,20 @@ function TicketList() {
           t.id === id ? { ...t, status: updatedStatus } : t
         )
       );
+      filterTickets(filterStatus); 
       toast.success(`Status changed to "${updatedStatus}"!`); 
     } catch (error) {
       console.error("Error updating ticket status:", error);
       toast.error("Failed to update ticket status."); 
+    }
+  };
+
+  const filterTickets = (status) => {
+    setFilterStatus(status);
+    if (status) {
+      setFilteredTickets(tickets.filter((ticket) => ticket.status === status));
+    } else {
+      setFilteredTickets(tickets);
     }
   };
 
@@ -49,7 +62,19 @@ function TicketList() {
 
   return (
     <div className="ticket-list">
-      {tickets.map((ticket) => (
+      
+      <div style={{ marginBottom: "10px" }}>
+        <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}>
+          <option value="">All</option>
+          <option value="Open">Open</option>
+          <option value="In Progress">In Progress</option>
+          <option value="Closed">Closed</option>
+        </select>
+        <button onClick={() => filterTickets(filterStatus)}>Filter</button>
+      </div>
+
+      
+      {filteredTickets.map((ticket) => (
         <TicketCard
           key={ticket.id}
           ticket={ticket}
@@ -58,7 +83,7 @@ function TicketList() {
         />
       ))}
 
-     
+      
       <ToastContainer
         position="top-right"
         autoClose={3000} 
